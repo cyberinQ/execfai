@@ -1,0 +1,113 @@
+openapi: 3.0.0
+info:
+  title: UKG Pro AI Analyst Mock API
+  description: Author: Sunil Jain with Gemini. Comprehensive mock for HR/Finance Query Synthesis.
+  version: 1.0.0
+
+servers:
+  - url: https://{subdomain}.ultipro.com/
+    variables:
+      subdomain:
+        default: tenant123
+
+components:
+  securitySchemes:
+    US-CUSTOMER-API-KEY:
+      type: apiKey
+      in: header
+      name: US-CUSTOMER-API-KEY
+    BasicAuth:
+      type: http
+      scheme: basic
+
+  schemas:
+    Employee:
+      type: object
+      properties:
+        employeeId: { type: string, example: "EEID12345" }
+        firstName: { type: string }
+        lastName: { type: string }
+        emailAddress: { type: string }
+        department: { type: string, example: "Engineering" }
+        location: { type: string, example: "Baltimore" }
+        jobTitle: { type: string }
+        employeeStatus: { type: string, enum: [Active, Terminated, Leave] }
+
+    Compensation:
+      type: object
+      properties:
+        employeeId: { type: string }
+        annualSalary: { type: number, format: float }
+        hourlyRate: { type: number, format: float }
+        payGroup: { type: string }
+        currencyCode: { type: string, example: "USD" }
+        effectiveDate: { type: string, format: date-time }
+
+    PayrollStatement:
+      type: object
+      properties:
+        payIdentifier: { type: string }
+        employeeId: { type: string }
+        grossPay: { type: number }
+        netPay: { type: number }
+        taxes: { type: number }
+        payDate: { type: string, format: date }
+
+paths:
+  # ATOMIC ENDPOINT 1: PEOPLE
+  /personnel/v1/person-details:
+    get:
+      summary: Retrieve basic employee profile
+      parameters:
+        - name: department
+          in: query
+          schema: { type: string }
+        - name: location
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: List of employees matching criteria
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Employee' }
+
+  # ATOMIC ENDPOINT 2: COMPENSATION
+  /personnel/v1/compensation-details/{employeeId}:
+    get:
+      summary: Get salary info for a specific ID
+      parameters:
+        - name: employeeId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Compensation record
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Compensation' }
+
+  # ATOMIC ENDPOINT 3: PAYROLL (POST for filtering)
+  /payroll/v1/employees/pay-statements:
+    post:
+      summary: Fetch actual pay runs (The "Burn" data)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                employeeId: { type: string }
+                startDate: { type: string, format: date }
+                endDate: { type: string, format: date }
+      responses:
+        '200':
+          description: Array of pay statements
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/PayrollStatement' }
