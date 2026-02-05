@@ -33,7 +33,7 @@ class AnalyticalBridge:
             return {"error": "Intent not recognized by the Analytical Fabric."}
 
     def _handle_absence_analysis(self, department: str):
-        # In production, this would call a specific 'get_absences' method
+        # Fetch raw data via the agent
         raw_data = self.agent.get_department_financials(department)
         
         if not raw_data:
@@ -41,7 +41,11 @@ class AnalyticalBridge:
 
         df = pd.DataFrame(raw_data)
         
-        # Defensive Check: Ensure required columns exist before calling analyzer
+        # ALIGNMENT: The UKG API uses 'employeeId', but the Analyzer expects 'employee_id'
+        if 'employeeId' in df.columns and 'employee_id' not in df.columns:
+            df = df.rename(columns={'employeeId': 'employee_id'})
+            
+        # Defensive Check: Ensure required columns exist
         if 'date' not in df.columns:
             return {"error": "Retrieved data missing required 'date' field for analysis."}
             
