@@ -1,0 +1,35 @@
+name: ExecFAI DevSecOps Pipeline
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-and-secure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov bandit safety
+
+      - name: Security Scan (Bandit)
+        run: bandit -r . -f txt  # Scans for insecure code patterns
+
+      - name: Dependency Check (Safety)
+        run: safety check  # Checks for known vulnerabilities in libraries
+
+      - name: Run Tests with 100% Coverage Threshold
+        run: |
+          pytest --cov=. --cov-report=xml --cov-fail-under=100 
+          # This command WILL FAIL the build if coverage is < 100%
