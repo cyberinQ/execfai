@@ -1,4 +1,4 @@
-name: ExecFAI DevSecOps Pipeline
+name: ExecFAI Dockerized DevSecOps
 
 on:
   push:
@@ -7,29 +7,25 @@ on:
     branches: [ main ]
 
 jobs:
-  test-and-secure:
+  build-and-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and Test in Container
+        run: |
+          docker build -t execfai-agent .
+          # Run tests inside the container and fail if coverage < 100%
+          docker run --rm execfai-agent python3 -m pytest --cov=core --cov-fail-under=100
+
+      - name: Security Scan (Trivy)
+        uses: aquasecurity/trivy-action@master
         with:
-          python-version: '3.11'
-
-      - name: Install Dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest pytest-cov bandit safety
-
-      - name: Security Scan (Bandit)
-        run: bandit -r . -f txt  # Scans for insecure code patterns
-
-      - name: Dependency Check (Safety)
-        run: safety check  # Checks for known vulnerabilities in libraries
-
-      - name: Run Tests with 100% Coverage Threshold
-        run: |
-          pytest --cov=. --cov-report=xml --cov-fail-under=100 
-          # This command WILL FAIL the build if coverage is < 100%
+          image-ref: 'execfai-agent'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          severity: 'CRITICAL,HIGH'

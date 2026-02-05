@@ -19,25 +19,40 @@ class AbsenceAnalyzer:
         self.df['day_of_week'] = self.df['date'].dt.day_name()
         self.df['is_weekend'] = self.df['date'].dt.dayofweek >= 5
 
-    def detect_patterns(self):
+    def detect_patterns(self, payday_dates=None):
+        """
+        Detects anomalies including Day-of-Week concentration and Payday Proximity.
+        payday_dates: List of strings ['YYYY-MM-DD']
+        """
         patterns = []
-        
-        # 1. Day-of-Week Concentration (e.g., "Monday/Friday Syndrome")
-        dow_counts = self.df['day_of_week'].value_counts()
         total_absences = len(self.df)
-        
-        for day, count in dow_counts.items():
-            if count / total_absences > 0.4:  # Threshold: 40% of absences on one day
-                patterns.append(f"High concentration of absences on {day}s ({count}/{total_absences}).")
+        if total_absences == 0:
+            return {"dates": [], "detected_patterns": ["No data available."]}
 
-        # 2. Weekend Adjacency (Mondays or Fridays)
+        # 1. Day-of-Week Concentration
+        dow_counts = self.df['day_of_week'].value_counts()
+        for day, count in dow_counts.items():
+            if count / total_absences >= 0.4:
+                patterns.append(f"High concentration on {day}s ({count}/{total_absences}).")
+
+        # 2. Weekend Adjacency
         weekend_adjacent = self.df[self.df['day_of_week'].isin(['Monday', 'Friday'])]
-        if len(weekend_adjacent) / total_absences > 0.6:
+        if len(weekend_adjacent) / total_absences >= 0.6:
             patterns.append("Pattern detected: 60%+ of absences occur adjacent to weekends.")
 
-        # 3. Proximity to Payday or Holidays (Placeholder for logic)
-        # Logic: if abs_date - holiday_date == 1 day...
-        
+        # 3. Payday Proximity (New Logic)
+        if payday_dates:
+            paydays = pd.to_datetime(payday_dates)
+            proximity_count = 0
+            for abs_date in self.df['date']:
+                # Calculate absolute days from nearest payday
+                days_diff = min(abs(paydays - abs_date)).days
+                if days_diff <= 1:
+                    proximity_count += 1
+            
+            if proximity_count / total_absences >= 0.4:
+                patterns.append(f"Payday Proximity: {proximity_count}/{total_absences} absences occurred +/- 1 day of payday.")
+
         return {
             "dates": self.df['date'].dt.strftime('%Y-%m-%d').tolist(),
             "detected_patterns": patterns if patterns else ["No statistically significant patterns found."]
