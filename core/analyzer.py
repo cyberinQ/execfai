@@ -43,8 +43,8 @@ class AbsenceAnalyzer:
             "detected_patterns": patterns if patterns else ["No statistically significant patterns found."]
         }
 
-# Example Usage (Internal Test):
-if __name__ == "__main__":
+# Use the pragma comment to tell the coverage reporter to ignore this block
+if __name__ == "__main__":  # pragma: no cover
     sample_data = pd.DataFrame({
         'employee_id': ['EMP001']*5,
         'date': ['2025-01-06', '2025-01-13', '2025-01-20', '2025-02-03', '2025-02-05'],
