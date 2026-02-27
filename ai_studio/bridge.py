@@ -27,7 +27,10 @@ class AnalyticalBridge:
         
         if action == "analyze_absences":
             return self._handle_absence_analysis(intent.get("department"))
+        elif action == "predict_turnover":
+            return self._handle_turnover_prediction(intent.get("department"))
         elif action == "get_financials":
+
             return self.agent.get_department_financials(intent.get("department"))
         else:
             return {"error": "Intent not recognized by the Analytical Fabric."}
@@ -51,3 +54,15 @@ class AnalyticalBridge:
             
         analyzer = AbsenceAnalyzer(df)
         return analyzer.detect_patterns()
+
+    def _handle_turnover_prediction(self, department: str):
+        from core.turnover_predictor import TurnoverPredictor
+        raw_data = self.agent.get_department_financials(department)
+        df = pd.DataFrame(raw_data)
+        
+        # Align naming for the predictor
+        if 'employeeId' in df.columns:
+            df = df.rename(columns={'employeeId': 'employee_id'})
+            
+        predictor = TurnoverPredictor(df)
+        return predictor.predict_flight_risk()

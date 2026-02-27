@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../tex2sql/data_schemas"
+		}
+	],
+	"settings": {}
+}

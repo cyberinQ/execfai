@@ -27,13 +27,17 @@ class TestAnalyticalBridge(unittest.TestCase):
     @patch('core.ukg_agent.UKGExecutionAgent.get_department_financials')
     @patch('core.analyzer.AbsenceAnalyzer.detect_patterns')
     def test_route_analyze_absences(self, mock_detect, mock_financials):
-        # FIX: Provide the 'date' column that AbsenceAnalyzer requires
+        # ALIGNMENT: Provide the 'date' field the analyzer expects
         mock_financials.return_value = [
             {"employeeId": "EEID1", "date": "2025-01-06"},
             {"employeeId": "EEID1", "date": "2025-01-13"}
         ]
         mock_detect.return_value = {"detected_patterns": ["High concentration on Mondays"]}
         
+        intent = json.dumps({"action": "analyze_absences", "department": "Engineering"})
+        result = self.bridge.route_query(intent)
+        self.assertIn("High concentration on Mondays", result["detected_patterns"])
+
         intent = json.dumps({"action": "analyze_absences", "department": "Engineering"})
         result = self.bridge.route_query(intent)
         self.assertIn("High concentration on Mondays", result["detected_patterns"])

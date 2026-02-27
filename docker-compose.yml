@@ -2,8 +2,13 @@ version: '3.8'
 services:
   ai-agent:
     build: .
+
+    ports:
+      - "8501:8501"
+
     volumes:
       - .:/app  # Hot-reloading: changes on your Mac reflect in the container
+
     environment:
       - UKG_API_KEY=${UKG_API_KEY}
       - UKG_AUTH_TOKEN=${UKG_AUTH_TOKEN}

@@ -21,3 +21,6 @@ ENV PYTHONPATH=/app
 
 # Default command: Run the tests to ensure the container is healthy
 CMD ["python3", "-m", "pytest", "--cov=core", "--cov-fail-under=100"]
+
+EXPOSE 8501
+CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]

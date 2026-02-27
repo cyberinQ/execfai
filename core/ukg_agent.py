@@ -26,17 +26,24 @@ class UKGExecutionAgent:
         self.enforcer = SecurityEnforcer(user_context)
 
     def get_department_financials(self, department: str) -> List[Dict]:
-        # Step 1: Securely fetch IDs
+        # Handle Mock Environment for Localhost 8501
+        if "tenant123" in self.base_url:
+            return [
+                {"employeeId": "EEID1", "date": "2025-01-06", "annualSalary": 120000},
+                {"employeeId": "EEID1", "date": "2025-01-13", "annualSalary": 120000},
+                {"employeeId": "EEID1", "date": "2025-01-20", "annualSalary": 120000},
+                {"employeeId": "EEID2", "date": "2025-01-06", "annualSalary": 95000}
+            ]
+
+        # Real API Logic
         params = self.enforcer.apply_scope({"department": department})
         personnel_url = f"{self.base_url}/personnel/v1/person-details"
         response = requests.get(personnel_url, headers=self.headers, params=params)
-        
-        # FAIL LOUDLY: Ensure we don't proceed with bad data
         response.raise_for_status()
+        
         employees = response.json()
         employee_ids = [emp['employeeId'] for emp in employees]
 
-        # Step 2: Parallel Hydration
         results = []
         with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
             futures = [executor.submit(self._fetch_comp, eid) for eid in employee_ids]

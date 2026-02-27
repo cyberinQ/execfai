@@ -1,3 +1,4 @@
+streamlit>=1.30.0
 # PRIMARY APPLICATION LOGIC
 pandas>=2.0.0
 numpy>=1.24.0
@@ -10,3 +11,4 @@ pytest-cov>=4.1.0
 # DEVSECOPS SECURITY
 bandit>=1.7.5
 safety>=2.3.5
+
